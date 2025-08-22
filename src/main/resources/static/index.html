@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Home - Secret Kitchen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a class="logo" href="#">Secret Kitchen</a>
+    <ul>
+      <li><a href="reservation.html">Reservation</a></li>
+      <li><a href="feedback.html">Feedback</a></li>
+      <li><a href="order.html">Order</a></li>
+      <li><a href="#" id="logoutBtn">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <center><h1>Welcome to Secret Kitchen 🍴</h1>
+    <p>Your favorite place to order food and reserve tables.</p>
+    </center>
+  </div>
+
+  <section class="menu-showcase">
+    <h2>Explore Our Menu</h2>
+    <div class="menu-grid">
+      <a href="menu.html#starters" class="menu-card-link">
+        <div class="menu-card">
+          <img src="images/starters.jpg" alt="Starters">
+          <div class="card-caption">Starters</div>
+        </div>
+      </a>
+      <a href="menu.html#pizza" class="menu-card-link">
+        <div class="menu-card">
+          <img src="images/pizza.jpg" alt="Pizza">
+          <div class="card-caption">Pizza</div>
+        </div>
+      </a>
+      <a href="menu.html#burgers" class="menu-card-link">
+        <div class="menu-card">
+          <img src="images/burger.avif" alt="Burger">
+          <div class="card-caption">Burgers</div>
+        </div>
+      </a>
+      <a href="menu.html#pasta" class="menu-card-link">
+        <div class="menu-card">
+          <img src="images/pasta.jpg" alt="Pasta">
+          <div class="card-caption">Pasta</div>
+        </div>
+      </a>
+      <a href="menu.html#biryani" class="menu-card-link">
+        <div class="menu-card">
+          <img src="images/biryani.jpg" alt="Biryani">
+          <div class="card-caption">Biryani</div>
+        </div>
+      </a>
+      <a href="menu.html#curries" class="menu-card-link">
+        <div class="menu-card">
+          <img src="images/curries.webp" alt="Curries">
+          <div class="card-caption">Curries</div>
+        </div>
+      </a>
+      <a href="menu.html#breads" class="menu-card-link">
+        <div class="menu-card">
+          <img src="images/breads.jpg" alt="Indian Breads">
+          <div class="card-caption">Indian Breads</div>
+        </div>
+      </a>
+      <a href="menu.html#desserts" class="menu-card-link">
+        <div class="menu-card">
+          <img src="images/desserts.jpg" alt="Desserts">
+          <div class="card-caption">Desserts</div>
+        </div>
+      </a>
+      <a href="menu.html#beverages" class="menu-card-link">
+        <div class="menu-card">
+          <img src="images/beverages.jpg" alt="Beverages">
+          <div class="card-caption">Beverages</div>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <script>
+    if(localStorage.getItem("sk_role") !== "USER"){
+      location.href="login.html";
+    }
+    document.getElementById("logoutBtn").addEventListener("click", ()=>{
+      localStorage.removeItem("sk_role");
+      location.href="login.html";
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Order Food - Secret Kitchen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .dish-row { display: flex; gap: 10px; margin-bottom: 8px; }
+    .dish-row select, .dish-row input { flex: 1; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a class="logo" href="index.html">Secret Kitchen</a>
+    <ul>
+      <li><a href="reservation.html">Reservations</a></li>
+      <li><a href="feedback.html">Feedback</a></li>
+      <li><a href="#" id="logoutBtn">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="form-box">
+      <h2>Place Your Order</h2>
+      <form id="orderForm">
+        <input type="text" id="customerName" placeholder="Full Name" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="text" id="phone" placeholder="Phone Number" required>
+        <input type="text" id="address" placeholder="Delivery Address" required>
+
+        <h3>Select Dishes</h3>
+        <div id="dishList"></div>
+        <button type="button" class="btn" onclick="addDish()">+ Add Dish</button>
+
+        <input type="text" value="Cash on Delivery" disabled>
+        <button type="submit" class="btn">Order Now</button>
+      </form>
+      <p id="orderMsg" class="small"></p>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://localhost:8080";
+
+    // UPDATED menu object, now organized by category
+    const menu = {
+      "Starters": { "Veg Spring Rolls": 120, "Chicken 65": 180, "Paneer Tikka": 200, "Crispy Corn": 150, "Gobi Manchurian": 160 },
+      "Pizza": { "Margherita Pizza": 220, "Farmhouse Pizza": 280, "Chicken Pepperoni Pizza": 350, "Paneer Tandoori Pizza": 300, "Veggie Supreme Pizza": 270 },
+      "Burgers": { "Classic Veg Burger": 120, "Cheese Burst Burger": 150, "Chicken Zinger Burger": 180, "Paneer Tikka Burger": 160, "Double Patty Burger": 200 },
+      "Pasta": { "White Sauce Pasta": 220, "Red Sauce Pasta": 200, "Alfredo Pasta": 240, "Arrabbiata Pasta": 230, "Mac n Cheese Pasta": 210 },
+      "Biryani": { "Veg Biryani": 220, "Chicken Dum Biryani": 300, "Mutton Biryani": 380, "Egg Biryani": 250, "Hyderabadi Special Biryani": 400 },
+      "Curries": { "Butter Chicken": 320, "Paneer Butter Masala": 260, "Dal Tadka": 180, "Kadai Chicken": 340, "Chole Masala": 200 },
+      "Indian Breads": { "Butter Naan": 40, "Garlic Naan": 50, "Tandoori Roti": 25, "Stuffed Kulcha": 70, "Paratha": 60 },
+      "Desserts": { "Gulab Jamun": 90, "Rasmalai": 120, "Gajar Ka Halwa": 130, "Ice Cream Sundae": 150, "Chocolate Brownie with Ice Cream": 180 },
+      "Beverages": { "Masala Chai": 40, "Cold Coffee": 100, "Fresh Lime Soda": 80, "Mango Milkshake": 120, "Soft Drinks": 50 }
+    };
+
+    // Create a flat version of the menu for easy price lookup
+    const flatMenu = {};
+    for (const category in menu) {
+      for (const itemName in menu[category]) {
+        flatMenu[itemName] = menu[category][itemName];
+      }
+    }
+
+    // Ensure user logged in
+    if(localStorage.getItem("sk_role") !== "USER"){
+      location.href="login.html";
+    }
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", ()=>{
+      localStorage.removeItem("sk_role");
+      location.href="login.html";
+    });
+
+    // UPDATED function to generate categorized dropdown
+    function addDish(){
+      const div = document.createElement("div");
+      div.classList.add("dish-row");
+
+      let optionsHtml = '<option value="">-- Select Dish --</option>';
+      for (const category in menu) {
+        optionsHtml += `<optgroup label="${category}">`;
+        for (const itemName in menu[category]) {
+          const price = menu[category][itemName];
+          optionsHtml += `<option value="${itemName}">${itemName} - ₹${price}</option>`;
+        }
+        optionsHtml += '</optgroup>';
+      }
+
+      div.innerHTML = `
+        <select class="dishName" required>${optionsHtml}</select>
+        <input type="number" class="dishQty" min="1" value="1" required>
+      `;
+      document.getElementById("dishList").appendChild(div);
+    }
+    addDish(); // add first row
+
+    // Submit order
+    document.getElementById("orderForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const name = document.getElementById("customerName").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const address = document.getElementById("address").value.trim();
+      const msg = document.getElementById("orderMsg");
+
+      const dishes = [...document.querySelectorAll(".dish-row")].map(row=>{
+        const dish = row.querySelector(".dishName").value;
+        const qty = parseInt(row.querySelector(".dishQty").value,10);
+        // Use flatMenu for price lookup
+        return {dish, qty, price: flatMenu[dish]};
+      }).filter(d=>d.dish && d.qty>0);
+
+      if(!name || !email || !phone || !address || dishes.length===0){
+        msg.textContent = "⚠️ Fill all fields and select at least one dish.";
+        return;
+      }
+
+      // Build order details
+      let orderDetails = "";
+      let total = 0;
+      dishes.forEach(d=>{
+        orderDetails += `${d.dish} x ${d.qty} = ₹${d.price * d.qty}\n`;
+        total += d.price * d.qty;
+      });
+
+      try {
+        const payload = {
+          customerName: name,
+          email,
+          phone,
+          address,
+          orderDetails,
+          totalAmount: total,
+          paymentMode: "Cash on Delivery"
+        };
+
+        const res = await fetch(`${API_BASE}/orders`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if(res.ok){
+          localStorage.setItem("lastOrder", JSON.stringify(data));
+          location.href="success.html";
+        } else {
+          msg.textContent = "❌ Order failed!";
+        }
+      } catch(err){
+        msg.textContent = "Server error!";
+      }
+    });
+  </script>
+</body>
+</html>

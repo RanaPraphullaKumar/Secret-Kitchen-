@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Feedback - Secret Kitchen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a class="logo" href="index.html">Secret Kitchen</a>
+    <ul>
+      <li><a href="order.html">Orders</a></li>
+      <li><a href="reservation.html">Reservations</a></li>
+      <li><a href="#" id="logoutBtn">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="form-box">
+      <h2>Customer Feedback</h2>
+      <form id="feedbackForm">
+        <input type="text" id="feedbackName" placeholder="Your Name" required>
+        <input type="email" id="feedbackEmail" placeholder="Your Email" required>
+        <textarea id="feedbackMessage" placeholder="Your feedback..." required></textarea>
+        <button type="submit" class="btn">Submit Feedback</button>
+      </form>
+      <p id="feedbackMsg" class="small"></p>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://localhost:8080";
+
+    // Protect page
+    if(localStorage.getItem("sk_role") !== "USER"){
+      location.href="login.html";
+    }
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", ()=>{
+      localStorage.removeItem("sk_role");
+      location.href="login.html";
+    });
+
+    // Submit feedback
+    document.getElementById("feedbackForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const name = document.getElementById("feedbackName").value.trim();
+      const email = document.getElementById("feedbackEmail").value.trim();
+      const comments = document.getElementById("feedbackMessage").value.trim();
+      const msg = document.getElementById("feedbackMsg");
+
+      if(!comments){
+        msg.textContent = "Please write your feedback.";
+        return;
+      }
+
+      try {
+        const payload = { customerName: name, email, comments };
+        const res = await fetch(`${API_BASE}/feedback`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const text = await res.text();
+        if(res.ok){
+          msg.textContent = text || "Thank you for your feedback!";
+          document.getElementById("feedbackForm").reset();
+        } else {
+          msg.textContent = text || "Feedback submission failed.";
+        }
+      } catch(err){
+        msg.textContent = "Server error!";
+      }
+    });
+  </script>
+</body>
+</html>

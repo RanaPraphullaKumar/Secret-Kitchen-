@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Signup - Secret Kitchen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="style.css"/>
+  <!-- Remix Icon CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div class="form-box">
+      <h2>Signup</h2>
+      <form id="signupForm">
+        <input type="text" id="signupName" placeholder="Full Name" required>
+        <input type="email" id="signupEmail" placeholder="Email" required>
+        <input type="text" id="signupPhone" placeholder="Phone Number" required>
+
+        <div class="password-container">
+          <input type="password" id="signupPassword" placeholder="Password" required>
+          <i class="ri-eye-off-fill toggle-password" id="toggleSignupPassword"></i>
+        </div>
+
+        <div class="password-container">
+          <input type="password" id="signupPasswordConfirm" placeholder="Confirm Password" required>
+          <i class="ri-eye-off-fill toggle-password" id="toggleSignupConfirm"></i>
+        </div>
+
+        <button type="submit" class="btn">Register</button>
+      </form>
+      <p id="signupMsg" class="small"></p>
+      <p class="small">Already have an account? <a href="login.html">Login</a></p>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://localhost:8080";
+
+    // Toggle password fields
+    function togglePassword(inputId, iconId){
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      icon.addEventListener("click", function() {
+        if(input.type === "password") {
+          input.type = "text";
+          this.classList.remove("ri-eye-off-fill");
+          this.classList.add("ri-eye-fill");
+        } else {
+          input.type = "password";
+          this.classList.remove("ri-eye-fill");
+          this.classList.add("ri-eye-off-fill");
+        }
+      });
+    }
+    togglePassword("signupPassword","toggleSignupPassword");
+    togglePassword("signupPasswordConfirm","toggleSignupConfirm");
+
+    // Handle signup
+    document.getElementById("signupForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const name = document.getElementById("signupName").value.trim();
+      const email = document.getElementById("signupEmail").value.trim();
+      const phone = document.getElementById("signupPhone").value.trim();
+      const password = document.getElementById("signupPassword").value;
+      const confirm = document.getElementById("signupPasswordConfirm").value;
+      const msg = document.getElementById("signupMsg");
+
+      if(password !== confirm) {
+        msg.textContent = "Passwords do not match!";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, phone, password })
+        });
+        const text = await res.text();
+        if(res.ok){
+          msg.textContent = text || "Signup successful!";
+          setTimeout(()=> location.href="login.html", 1000);
+        } else {
+          msg.textContent = text || "Signup failed.";
+        }
+      } catch(err){
+        msg.textContent = "Server error!";
+      }
+    });
+  </script>
+</body>
+</html>

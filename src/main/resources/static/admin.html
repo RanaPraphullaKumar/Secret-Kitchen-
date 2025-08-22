@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Admin Dashboard - Secret Kitchen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a class="logo" href="#">Secret Kitchen Admin</a>
+    <ul><li><a href="#" id="logoutBtn">Logout</a></li></ul>
+  </nav>
+
+  <div class="container">
+    <h1>📊 Admin Dashboard</h1>
+
+    <div class="table-card">
+      <h3>Orders</h3>
+      <table id="ordersTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Customer</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Order Details</th>
+            <th>Address</th>
+            <th>Total Amount</th>
+            <th>Payment Mode</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="table-card">
+      <h3>Reservations</h3>
+      <table id="reservationsTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Seats</th>
+            <th>Date</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="table-card">
+      <h3>Feedback</h3>
+      <table id="feedbackTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE='http://localhost:8080';
+
+    // Protect page
+    if(localStorage.getItem("sk_role") !== "ADMIN"){
+      location.href="login.html";
+    }
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", ()=>{
+      localStorage.removeItem("sk_role");
+      location.href="login.html";
+    });
+
+    // Load admin data
+    async function loadAdmin(){
+      try {
+        const [ords, resv, fdb] = await Promise.all([
+          fetch(`${API_BASE}/admin/orders`).then(r => r.json()),
+          fetch(`${API_BASE}/admin/reservations`).then(r => r.json()),
+          fetch(`${API_BASE}/admin/feedback`).then(r => r.json())
+        ]);
+
+        // Orders
+        const ot = document.querySelector('#ordersTable tbody');
+        ot.innerHTML = ords.map(o => `
+          <tr>
+            <td>${o.id}</td>
+            <td>${o.customerName||''}</td>
+            <td>${o.email||''}</td>
+            <td>${o.phone||''}</td>
+            <td><pre style="white-space:pre-wrap">${o.orderDetails||''}</pre></td>
+            <td>${o.address||''}</td>
+            <td>₹${o.totalAmount||0}</td>
+            <td>${o.paymentMode||'COD'}</td>
+          </tr>
+        `).join('');
+
+        // Reservations
+        const rt = document.querySelector('#reservationsTable tbody');
+        rt.innerHTML = resv.map(r => `
+          <tr>
+            <td>${r.id}</td>
+            <td>${r.customerName||''}</td>
+            <td>${r.seats||''}</td>
+            <td>${r.reservationDate||''}</td>
+            <td>${r.reservationTime||''}</td>
+          </tr>
+        `).join('');
+
+        // Feedback
+        const ft = document.querySelector('#feedbackTable tbody');
+        ft.innerHTML = fdb.map(f => `
+          <tr>
+            <td>${f.id}</td>
+            <td>${f.customerName||''}</td>
+            <td>${f.email||''}</td>
+            <td>${f.comments||''}</td>
+          </tr>
+        `).join('');
+      } catch(err){
+        console.error(err);
+        alert("Error loading admin data!");
+      }
+    }
+    loadAdmin();
+  </script>
+</body>
+</html>

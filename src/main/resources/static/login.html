@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Login - Secret Kitchen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="style.css"/>
+  <!-- Remix Icon CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div class="form-box">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <input type="email" id="loginEmail" placeholder="Email" required>
+
+        <div class="password-container">
+          <input type="password" id="loginPassword" placeholder="Password" required>
+          <i class="ri-eye-off-fill toggle-password" id="toggleLoginPassword"></i>
+        </div>
+
+        <button type="submit" class="btn">Login</button>
+      </form>
+      <p id="loginMsg" class="small"></p>
+      <p class="small">Don't have an account? <a href="signup.html">Signup</a></p>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://localhost:8080"; // backend port
+
+    // Toggle password visibility
+    document.getElementById("toggleLoginPassword").addEventListener("click", function() {
+      const pwd = document.getElementById("loginPassword");
+      if (pwd.type === "password") {
+        pwd.type = "text";
+        this.classList.remove("ri-eye-off-fill");
+        this.classList.add("ri-eye-fill");
+      } else {
+        pwd.type = "password";
+        this.classList.remove("ri-eye-fill");
+        this.classList.add("ri-eye-off-fill");
+      }
+    });
+
+    // Handle login
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const msg = document.getElementById("loginMsg");
+
+      // Admin login
+      if(email === "secretkitchen10@gmail.com" && password === "secretkitchen@10") {
+        localStorage.setItem("sk_role", "ADMIN");
+        msg.textContent = "Admin login successful!";
+        setTimeout(() => location.href = "admin.html", 800);
+        return;
+      }
+
+      // User login
+      try {
+        const body = new URLSearchParams();
+        body.append("email", email);
+        body.append("password", password);
+
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: body.toString()
+        });
+
+        const text = await res.text();
+        if(res.ok) {
+          msg.textContent = text;
+          localStorage.setItem("sk_role", "USER");
+          setTimeout(() => location.href = "index.html", 800);
+        } else {
+          msg.textContent = text || "Invalid credentials";
+        }
+      } catch(err) {
+        msg.textContent = "Server error, try again.";
+      }
+    });
+  </script>
+</body>
+</html>

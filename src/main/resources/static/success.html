@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Order Success</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="container">
+    <div class="form-box">
+      <h2>✅ Order Successful!</h2>
+      <p>Here are your order details:</p>
+      <pre id="orderSummary"></pre>
+      <h3 id="orderTotal"></h3>
+      <a href="index.html"><button class="btn">Back to Home</button></a>
+    </div>
+  </div>
+
+  <script>
+    const order = JSON.parse(localStorage.getItem("lastOrder"));
+    if(order){
+      document.getElementById("orderSummary").textContent = order.orderDetails;
+      document.getElementById("orderTotal").textContent = "Total Amount: ₹" + order.totalAmount;
+    } else {
+      document.getElementById("orderSummary").textContent = "No order found.";
+    }
+  </script>
+</body>
+</html>

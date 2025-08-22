@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Reserve a Table - Secret Kitchen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a class="logo" href="index.html">Secret Kitchen</a>
+    <ul>
+      <li><a href="order.html">Orders</a></li>
+      <li><a href="feedback.html">Feedback</a></li>
+      <li><a href="#" id="logoutBtn">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="form-box">
+      <h2>Reserve a Table</h2>
+      <form id="reservationForm">
+        <input type="text" id="customerName" placeholder="Your Name" required>
+        <input type="number" id="tableSize" placeholder="Table for how many?" min="1" required>
+        <input type="date" id="reservationDate" required>
+        <input type="time" id="reservationTime" required>
+        <button type="submit" class="btn">Reserve</button>
+      </form>
+      <p id="reservationMsg" class="small"></p>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://localhost:8080";
+
+    // Protect page
+    if(localStorage.getItem("sk_role") !== "USER"){
+      location.href="login.html";
+    }
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", ()=>{
+      localStorage.removeItem("sk_role");
+      location.href="login.html";
+    });
+
+    // Submit reservation
+    document.getElementById("reservationForm").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const name = document.getElementById("customerName").value.trim();
+      const seats = parseInt(document.getElementById("tableSize").value, 10);
+      const date = document.getElementById("reservationDate").value;
+      const time = document.getElementById("reservationTime").value;
+      const msg = document.getElementById("reservationMsg");
+
+      if(!name || seats < 1 || !date || !time){
+        msg.textContent = "Please enter valid reservation details.";
+        return;
+      }
+
+      try {
+        const payload = { customerName: name, seats, reservationDate: date, reservationTime: time };
+        const res = await fetch(`${API_BASE}/reservations`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const text = await res.text();
+        if(res.ok){
+          msg.textContent = text || "Reservation successful!";
+          setTimeout(()=> location.href="success.html", 1000);
+        } else {
+          msg.textContent = text || "Reservation failed.";
+        }
+      } catch(err){
+        msg.textContent = "Server error!";
+      }
+    });
+  </script>
+</body>
+</html>
